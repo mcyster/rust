@@ -13,7 +13,7 @@ If your having problems try:
 ```
 cargo clean
 cargo build
-cargo run
+cargo run --bin hello_world
 ```
 
 ## Setup
