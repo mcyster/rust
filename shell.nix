@@ -9,11 +9,18 @@
   in
   pkgs.mkShell rec {
     buildInputs = with pkgs; [
-      clang
       llvmPackages.bintools
+      clang
       rustup
+
+      # sdl2
       pkgs.SDL2
       pkgs.SDL2.dev
+
+      # bevy
+      #udev alsa-lib vulkan-loader
+      #xorg.libX11 xorg.libXcursor xorg.libXi xorg.libXrandr # bevy with X
+      #libxkbcommon wayland # bevy with ayland 
     ];
 
     RUSTC_VERSION = overrides.toolchain.channel;

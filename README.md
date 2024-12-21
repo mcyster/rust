@@ -6,7 +6,6 @@ To run
 ```
 cd $R_HOME
 cargo run --bin hello_world
-cargo run --bin rectangles
 ```
 
 If your having problems try:

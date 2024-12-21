@@ -59,8 +59,8 @@ fn main() {
            canvas.set_draw_color(Color::RGB(red, green, blue));
            canvas.fill_rect(rectangle).unwrap();
 
-           canvas.present();
     }
+    canvas.present();
 
     let mut event_pump = sdl_context.event_pump().unwrap();
     'running: loop {

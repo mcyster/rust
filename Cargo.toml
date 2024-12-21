@@ -1,5 +1,5 @@
 [workspace]
-members = ["hello_world", "rectangles"]
+members = ["hello_world", "sdl2", "bevy"]
 resolver = "2"
 
 
