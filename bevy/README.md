@@ -4,20 +4,11 @@
 
 ## References
 
-https://bevyengine.org/learn/
+- [Bevy Docs](https://bevyengine.org/)
 
-https://bevy-cheatbook.github.io/setup/getting-started.html
-  - https://bevy-cheatbook.github.io/setup/bevy-config.html?highlight=webgl2
+- [Bevy Cheatbook](https://bevy-cheatbook.github.io/setup/getting-started.html)
 
-https://github.com/bevyengine/bevy/discussions?discussions_q=
-
-
-# wasm
-
-cargo run --target wasm32-unknown-unknown
-
-wasm-bindgen --out-dir ./out --target web /home/wal/rust/target/wasm32-unknown-unknown/debug/bevy.wasm
-
+- [Bevy Forum](https://github.com/bevyengine/bevy/discussions?discussions_q=)
 
 # Setup
 
@@ -35,7 +26,9 @@ Try using sofware emulation, with
 export WGPU_BACKEND=vulkan
 ```
 
+## TBD wasm
 
+cargo run --target wasm32-unknown-unknown
 
-
+wasm-bindgen --out-dir ./out --target web /home/wal/rust/target/wasm32-unknown-unknown/debug/bevy.wasm
 
