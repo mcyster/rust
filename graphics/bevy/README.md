@@ -10,6 +10,8 @@
 
 - [Bevy Forum](https://github.com/bevyengine/bevy/discussions?discussions_q=)
 
+- [Youtube / learn](https://www.youtube.com/playlist?list=PLVnntJRoP85JHGX7rGDu6LaF3fmDDbqyd)
+
 # Setup
 
 ## Ubuntu
