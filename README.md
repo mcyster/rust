@@ -2,10 +2,10 @@
 
 ## Development
 
-To run
+To run, for example the hello_world program in sanity
 ```
-cd $R_HOME
-cargo run --bin hello_world
+cd $R_HOME/sanity/hellow_world
+cargo run
 ```
 
 If your having problems try:
@@ -25,4 +25,3 @@ cd rust
 nix-shell
 # develop in this shell
 ```
-
