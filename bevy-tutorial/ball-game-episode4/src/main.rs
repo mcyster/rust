@@ -3,9 +3,9 @@ use bevy::window::PrimaryWindow;
 use rand::prelude::*;
 
 pub const PLAYER_SPEED: f32 = 500.0;
-pub const PLAYER_SIZE: f32 = 64.0; 
+pub const PLAYER_SIZE: f32 = 64.0;
 pub const NUMBER_OF_ENEMIES: usize = 4;
-pub const ENEMY_SIZE: f32 = 64.0; 
+pub const ENEMY_SIZE: f32 = 64.0;
 pub const ENEMY_SPEED: f32 = 200.0;
 
 fn main() {
@@ -63,7 +63,7 @@ fn spawn_enemies(
 ) {
     let window = windows.single();
 
-    let half_enemy_size = ENEMY_SIZE / 2.0; 
+    let half_enemy_size = ENEMY_SIZE / 2.0;
     for _ in 0..NUMBER_OF_ENEMIES {
         let random_x = random::<f32>() * (window.width() - ENEMY_SIZE) - window.width() / 2.0 + half_enemy_size;
         let random_y = random::<f32>() * (window.height() - ENEMY_SIZE) - window.height() / 2.0 + half_enemy_size;
@@ -158,7 +158,7 @@ fn update_enemy_direction(
 ) {
     let window = window_query.get_single().unwrap();
 
-    let half_enemy_size = ENEMY_SIZE / 2.0; 
+    let half_enemy_size = ENEMY_SIZE / 2.0;
     let x_min = - window.width() / 2.0 + half_enemy_size;
     let x_max = window.width() / 2.0 - half_enemy_size;
     let y_min = - window.height() / 2.0 + half_enemy_size;
