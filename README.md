@@ -25,3 +25,8 @@ cd rust
 nix-shell
 # develop in this shell
 ```
+
+
+# References
+
+- https://github.com/bevyengine/bevy/blob/e67cfdf82b5726db4d449e9af31b865a5324aa19/docs/linux_dependencies.md#nix
