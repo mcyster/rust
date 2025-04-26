@@ -11,9 +11,7 @@ pub const ENEMY_SPEED: f32 = 200.0;
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
-        .add_systems(Startup, spawn_camera)
-        .add_systems(Startup, spawn_player)
-        .add_systems(Startup, spawn_enemies)
+        .add_systems(Startup, (spawn_camera, spawn_player, spawn_enemies).chain())
         .add_systems(Update, player_movement)
         .add_systems(Update, confine_player_movement)
         .add_systems(Update, enemy_movement)
