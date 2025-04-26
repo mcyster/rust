@@ -1,119 +1,148 @@
 use env_logger;
 use log::info;
-use std::sync::Arc;
+use std::{num::NonZeroU32, sync::Arc};
 use winit::{
-    event::{Event, WindowEvent},
-    event_loop::{ActiveEventLoop, ControlFlow, EventLoop}, // ActiveEventLoop might be unused with .run()
-    window::Window,
+    application::ApplicationHandler, // Import the trait
+    event::WindowEvent,
+    event_loop::{ActiveEventLoop, ControlFlow, EventLoop},
+    window::{Window, WindowId}, // Import WindowId
 };
 use softbuffer::{Context, Surface};
+
+// Struct to hold application state
+struct ApplicationState {
+    window: Option<Arc<Window>>,
+    context: Option<Context<Arc<Window>>>, // Store context for potential recreation
+    surface: Option<Surface<Arc<Window>, Arc<Window>>>,
+}
+
+impl ApplicationState {
+    // Helper to redraw the window content
+    fn redraw(&mut self) {
+        if let (Some(window), Some(surface)) = (self.window.as_ref(), self.surface.as_mut()) {
+            let (width, height) = {
+                let size = window.inner_size();
+                (size.width, size.height)
+            };
+
+            if let (Some(non_zero_width), Some(non_zero_height)) = (
+                NonZeroU32::new(width),
+                NonZeroU32::new(height),
+            ) {
+                surface
+                    .resize(non_zero_width, non_zero_height)
+                    .expect("Failed to resize surface");
+
+                let mut buffer = surface.buffer_mut().expect("Failed to get buffer");
+                for index in 0..(width * height) as usize {
+                    buffer[index] = 0xFF00_8000; // Opaque dark green (ARGB)
+                }
+                buffer.present().expect("Failed to present buffer");
+                info!("Redraw complete");
+            } else {
+                info!("Skipping redraw for zero size window");
+            }
+        }
+    }
+}
+
+// Implement the ApplicationHandler trait for our state struct
+impl ApplicationHandler for ApplicationState {
+    // This method runs once when the application resumes (often at startup)
+    fn resumed(&mut self, event_loop: &ActiveEventLoop) {
+        if self.window.is_none() {
+            info!("Resumed: Creating window and surface");
+            let window_attributes = Window::default_attributes()
+                .with_title("Softbuffer Example (run_app)")
+                .with_inner_size(winit::dpi::LogicalSize::new(800, 600));
+            let window = Arc::new(
+                event_loop
+                    .create_window(window_attributes)
+                    .expect("Failed to create window"),
+            );
+
+            let context = Context::new(window.clone()).expect("Failed to create softbuffer context");
+            let surface =
+                Surface::new(&context, window.clone()).expect("Failed to create surface");
+
+            self.window = Some(window);
+            self.context = Some(context);
+            self.surface = Some(surface);
+        } else {
+            info!("Resumed: Window already exists");
+        }
+        // Ensure the window is drawn at least once after resuming/creation
+        if let Some(window) = self.window.as_ref() {
+            window.request_redraw();
+        }
+    }
+
+    // Handles events specific to a window
+    fn window_event(
+        &mut self,
+        event_loop: &ActiveEventLoop,
+        target_window_id: WindowId,
+        event: WindowEvent,
+    ) {
+        // Make sure the event is for our window
+        if let Some(window) = self.window.as_ref() {
+            if window.id() != target_window_id {
+                return; // Event not for our window
+            }
+        } else {
+            return; // No window exists yet
+        }
+
+        match event {
+            WindowEvent::CloseRequested => {
+                info!("Close requested");
+                event_loop.exit();
+            }
+            WindowEvent::Resized(new_size) => {
+                info!("Window resized to: {:?}", new_size);
+                // Redraw will handle surface resize
+                if let Some(window) = self.window.as_ref() {
+                    window.request_redraw();
+                }
+            }
+            WindowEvent::RedrawRequested => {
+                info!("RedrawRequested event received");
+                self.redraw(); // Call our redraw helper
+            }
+            _ => {}
+        }
+    }
+
+    // Called when the event loop is about to block and wait for events
+    fn about_to_wait(&mut self, _event_loop: &ActiveEventLoop) {
+        // Can be used for continuous rendering by always requesting redraw
+        // if let Some(window) = self.window.as_ref() {
+        //     window.request_redraw();
+        // }
+    }
+
+    // Called just before the application exits
+    fn exiting(&mut self, _event_loop: &ActiveEventLoop) {
+        info!("Exiting event loop");
+    }
+}
 
 fn main() {
     env_logger::init(); // Initialize logger
 
-    // 1. Define event_loop
     let event_loop = EventLoop::new().expect("Failed to create event loop");
+    // Set the control flow behavior (optional, Poll is default for run_app)
+    event_loop.set_control_flow(ControlFlow::Poll);
 
-    // 2. Define window and surface as Option types before the loop
-    let mut window: Option<Arc<Window>> = None;
-    let mut surface: Option<Surface<Arc<Window>, Arc<Window>>> = None;
+    // Initialize application state
+    let mut app_state = ApplicationState {
+        window: None,
+        context: None,
+        surface: None,
+    };
 
-    // 3. Now run the event loop (Note: .run() is deprecated)
+    // Run the application using run_app
     event_loop
-        .run(move |event, event_loop_window_target| {
-            event_loop_window_target.set_control_flow(ControlFlow::Poll);
-
-            match event {
-                Event::NewEvents(_) => {
-                    // Use window and surface (check if None)
-                    if window.is_none() {
-                        info!("Creating window and surface");
-                        let window_attributes = Window::default_attributes()
-                            .with_title("Softbuffer Example")
-                            .with_inner_size(winit::dpi::LogicalSize::new(800, 600));
-                        let new_window = Arc::new(
-                            event_loop_window_target
-                                .create_window(window_attributes)
-                                .expect("Failed to create window"),
-                        );
-
-                        let context = Context::new(new_window.clone())
-                            .expect("Failed to create softbuffer context");
-                        // Pass context by reference (&)
-                        let new_surface = Surface::new(&context, new_window.clone())
-                            .expect("Failed to create surface");
-
-                        // Assign to window and surface
-                        window = Some(new_window);
-                        surface = Some(new_surface);
-                    }
-                }
-                // ... other event handlers using window and surface ...
-                Event::WindowEvent {
-                    event: WindowEvent::RedrawRequested,
-                    window_id,
-                } => {
-                    // Check window and surface exist before using
-                    if let (Some(win), Some(surf)) = (window.as_ref(), surface.as_mut()) {
-                        if window_id == win.id() {
-                            // ... (redraw logic using win and surf) ...
-                            info!("RedrawRequested");
-                            let (width, height) = {
-                                let size = win.inner_size();
-                                (size.width, size.height)
-                            };
-
-                            if let (Some(non_zero_width), Some(non_zero_height)) = (
-                                std::num::NonZeroU32::new(width),
-                                std::num::NonZeroU32::new(height),
-                            ) {
-                                surf.resize(non_zero_width, non_zero_height)
-                                    .expect("Failed to resize surface");
-
-                                let mut buffer = surf.buffer_mut().expect("Failed to get buffer");
-                                for index in 0..(width * height) as usize {
-                                    buffer[index] = 0xFF00_8000; // Opaque dark green (ARGB)
-                                }
-                                buffer.present().expect("Failed to present buffer");
-                            } else {
-                                info!("Skipping redraw for zero size window");
-                            }
-                        }
-                    }
-                }
-                 // ... other event handlers like Resized, CloseRequested, AboutToWait ...
-                 Event::WindowEvent {
-                    event: WindowEvent::Resized(new_size),
-                    window_id,
-                } => {
-                     if let Some(win) = window.as_ref() {
-                         if window_id == win.id() {
-                            info!("Window resized to: {:?}", new_size);
-                            win.request_redraw();
-                         }
-                     }
-                }
-                Event::WindowEvent {
-                    event: WindowEvent::CloseRequested,
-                    window_id,
-                } => {
-                    if let Some(win) = window.as_ref() {
-                        if window_id == win.id() {
-                            info!("Close requested");
-                            event_loop_window_target.exit();
-                        }
-                    }
-                }
-                Event::LoopExiting => {
-                    info!("Exiting event loop");
-                }
-                Event::AboutToWait => {
-                    if let Some(win) = window.as_ref() {
-                         win.request_redraw();
-                    }
-                }
-                _ => {}
-            }
-        })
+        .run_app(&mut app_state) // Pass mutable reference to state
         .expect("Event loop failed");
 }
